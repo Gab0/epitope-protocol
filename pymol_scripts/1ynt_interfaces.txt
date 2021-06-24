@@ -1,0 +1,11 @@
+>chain b
+EPPTPNQSCTSKAVTIG 
+
+>chain a 
+TALPTYSIKGD
+
+> chain b with hydrogens
+LPTYPNQPSTSKAVTSIGD
+
+> chain a with hydrogens
+KTALPTYPSAKGD
