@@ -1,23 +1,21 @@
-#!/bin;python3
-
 """
 
 Takes a batch of protein sequences,
 
 """
 
+import sys
 from io import StringIO
 import os
 import hashlib
 import pandas as pd
 
-from . import StructureMutator
+from .Mutation import StructureMutator
 from . import ReadDSSP
 
 from .EpitopeDetection import bepipred_post
 from .OutputConstructor import plotEpitopeScore
 from .ProteinSequence.Antigens import processFile, read_epitope_file
-from .StructureMutator import sort_unique_sequences
 from .StructureUtils.BasicStructureOperations import GetStructureFasta, loadPDB
 
 WORD_VAR = "Variação"
@@ -33,34 +31,53 @@ def ordered_set(data):
 
 
 def main():
-    options = StructureMutator.parse_arguments(__doc__)
+
+    options = StructureMutator.parse_arguments(__doc__, require_pdb=False)
 
     ProteinAlignment = StructureMutator.loadProteinAlignment(
         options.AlignmentFile
     )
-    PDBStructure = loadPDB(options.PDBFile)
-    PDBSequence = GetStructureFasta(
-        PDBStructure
-    )
 
-    _, AllModelSequences =\
-        StructureMutator.ExtractStructurallyRelevantMutations(
-            ProteinAlignment,
-            PDBSequence
+    AllModelSequences = list(ProteinAlignment)
+    assert AllModelSequences
+    PDBSequence = None
+    DSSPVector = None
+
+    if options.PDBFile is not None:
+        PDBStructure = loadPDB(options.PDBFile.strip())
+        PDBSequence = GetStructureFasta(
+            PDBStructure
         )
+
+        _, AllModelSequences =\
+            StructureMutator.extract_structurally_relevant_mutations(
+                ProteinAlignment,
+                PDBSequence
+            )
+
+        DSSPVector = ReadDSSP.execute_dssp(options.PDBFile.strip())
 
     _, (_, EpitopeVector, MutationVector) =\
         processFile(AllModelSequences,
                     read_epitope_file(options.EpitopeFile))
 
-    UniqueSequences = ordered_set([
+    UniqueSequences = list(ordered_set([
         str(seq.seq)
         for seq in AllModelSequences
-    ])
+    ]))
 
-    UniqueSequences = sort_unique_sequences(UniqueSequences, PDBSequence)
+    if AllModelSequences and not UniqueSequences:
+        print("Weird behavior")
+        print(AllModelSequences)
+        print(UniqueSequences)
+        sys.exit(1)
 
-    DSSPVector = ReadDSSP.execute_dssp(options.PDBFile)
+    if not UniqueSequences:
+        print("No sequences detected.")
+        sys.exit(0)
+
+    UniqueSequences = StructureMutator.sort_unique_sequences(UniqueSequences, PDBSequence)
+
 
     # FIXME: These checking methods are deprecated;
     # assert Sequences[0] == AllModelSequences[0]
@@ -98,10 +115,11 @@ def execute_prediction(Sequences, PredictionMethod):
                 str(SEQ),
                 prediction_method=PredictionMethod
             )
-
+            assert content
+            print(content)
             buffer_content = StringIO(content.text)
             with open(SEQ_FILE, 'w') as f:
-                f.write(content.text)
+                f.write(content)
             data = pd.read_csv(buffer_content)
 
         curves.append(data)
