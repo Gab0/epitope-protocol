@@ -22,10 +22,10 @@ setup(
             "evalepitope=antigen_protocol.StructureUtils.ModelResidueSurface:main",
             "eptarea=antigen_protocol.ExecuteEpitopes:main",
             "autobepipred=antigen_protocol.EpitopeDetection.ParseBepipred:main",
+            "multibepipred=antigen_protocol.MultiBepiPred:main",
 
             # -- Mutate Protein;
             "strutmut=antigen_protocol.StructureMutator:main",
-            "multibepipred=antigen_protocol.MultiBepiPred:main",
 
             # -- Structure Visualization;
             "strutgraphic=antigen_protocol.StructureMap:main",
