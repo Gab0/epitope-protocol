@@ -66,4 +66,10 @@ class Mutation():
         self.toAA = t
 
     def __str__(self):
-        return "".join([self.fromAA, self.pos, self.toAA])
+        return self.show()
+
+    def show_spread(self) -> str:
+        return f"{self.pos}:{self.fromAA} -> {self.toAA}"
+
+    def show(self) -> str:
+        return "".join([self.fromAA, str(self.pos), self.toAA])
