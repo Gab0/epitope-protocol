@@ -19,8 +19,8 @@ import Bio.SeqIO
 
 from Bio import PDB
 
-from .StructureUtils import BasicStructureOperations, RMSD
-from .ProteinSequence import ProteinSequenceAlignment
+from ..StructureUtils import BasicStructureOperations, RMSD
+from ..ProteinSequence import ProteinSequenceAlignment
 from .Mutators import PymolMutator
 
 from .Types import OutputMutationFile, Mutation
@@ -77,7 +77,8 @@ def extract_model_versions(ProteinAlignment):
     pass
 
 
-def extract_structurally_relevant_mutations(ProteinAlignment, PDBSequence):
+def extract_structurally_relevant_mutations(
+        ProteinAlignment, PDBSequence):
 
     AllModelSequences = [
         Bio.SeqIO.SeqRecord(Bio.Seq.Seq(PDBSequence), id="PDB Sequence")
@@ -149,18 +150,9 @@ def loadProteinAlignment(ProteinFastaFile):
 
 def extract_mutations(ReferenceSequence, AlternativeSequence):
     for idx, base in ReferenceSequence:
-        if base != AlternativeSequence[idx]:
-            yield (idx, ReferenceSequence[idx], AlternativeSequence[idx])
-
-
-def show_mutation_spread(mutation) -> str:
-    (pos, fromAA, toAA) = mutation
-    return f"{pos}:{fromAA} -> {toAA}"
-
-
-def show_mutation(mutation) -> str:
-    (pos, fromAA, toAA) = mutation
-    return f"{fromAA}{pos}{toAA}"
+        if base != AlternativeSequence[idx - 1]:
+            yield Mutation(idx, base,
+                           AlternativeSequence[idx-1])
 
 
 def read_mutations(Input: str) -> List[Tuple[int, str, str]]:
@@ -201,8 +193,12 @@ def validate_mutation(ReferenceSequence, mutations, output_file):
                 "No matching index found between structures."
             )
 
-        expected_mutation = (b, refbase, MatchingBase[0])
-        smut = show_mutation(expected_mutation)
+        expected_mutation = Mutation(
+            b,
+            refbase,
+            MatchingBase[0]
+        )
+        smut = expected_mutation.show()
         if refbase != MatchingBase[0]:
             if b in MutationsPositions:
                 MutationsPositions.pop(MutationsPositions.index(b))
@@ -275,7 +271,7 @@ def RunStructureAgainstSequences(
 
     print("Running for model %s." % modelName)
     ModelVersions, AllModelSequences =\
-        ExtractStructurallyRelevantMutations(ProteinAlignment, PDBSequence)
+        extract_structurally_relevant_mutations(ProteinAlignment, PDBSequence)
 
     unique_model_sequences = sort_unique_sequences(
         AllModelSequences,
@@ -285,6 +281,7 @@ def RunStructureAgainstSequences(
     assert PDBSequence == unique_model_sequences[0]
     RealWorkingDirectory = os.path.abspath(WorkingDirectory)
     OutputStructureFiles = []
+    OutputVariations = []
     AllMutations = []
 
     for idx in range(len(ModelVersions)):
@@ -303,12 +300,12 @@ def RunStructureAgainstSequences(
                 GetModelFilename(idx, modelName)
             )
         )
-
+        OutputVariations.append(w)
         OutputStructureFiles.append(w)
 
     AllMutations = list(set(AllMutations))
     for mut in AllMutations:
-        mut_str = show_mutation(mut)
+        mut_str = mut.show()
         mut_prefix = f"mutation_{mut_str}"
         w = OutputMutationFile(
             [mut],
@@ -321,7 +318,11 @@ def RunStructureAgainstSequences(
 
     # -- Create one model per mutation group.
     for idx, output_file in enumerate(OutputStructureFiles):
-        write_mutated_structure(PDBFile, PDBSequence, output_file)
+        write_mutated_structure(
+            PDBFile,
+            PDBSequence,
+            output_file
+        )
 
     # -- Locate and write mutation hotspot information;
     Hotspots = FindMutationHotspots(AllModelSequences)
@@ -339,6 +340,8 @@ def RunStructureAgainstSequences(
     except Exception as e:
         print(e)
 
+    return OutputVariations
+
 
 def write_mutated_structure(
         PDBFile: str,
@@ -347,7 +350,7 @@ def write_mutated_structure(
     print(f"Generating mutations to file {output_file.output_filepath}")
 
     for mut in output_file.mutations:
-        print(f"\t{show_mutation_spread(mut)}")
+        print("\t" + mut.show_spread())
 
     if False:
         MUTATOR = None
