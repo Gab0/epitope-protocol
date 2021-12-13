@@ -56,6 +56,9 @@ class OutputMutationFile():
 
 
 class Mutation():
+    """
+    Information on a single mutation.
+    """
     pos: int
     fromAA: str
     toAA: str
@@ -73,3 +76,10 @@ class Mutation():
 
     def show(self) -> str:
         return "".join([self.fromAA, str(self.pos), self.toAA])
+
+    @classmethod
+    def read(cls, text):
+        f = text[0]
+        t = text[-1]
+        p = int(text[1:-1])
+        return cls(p, f, t)
