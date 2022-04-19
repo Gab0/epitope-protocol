@@ -6,3 +6,4 @@ pandas
 pyquaternion
 rmsd
 biostructmap
+colored
