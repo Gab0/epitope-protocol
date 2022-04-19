@@ -1,14 +1,14 @@
 
 ## About
 
-This toolkit is a parasitology analysis protocol.
-It was written to help on a research that tries to explain
+This toolkit was developed as a parasitology analysis protocol.
+The goal is to try to explain
 how certain protein mutations on the parasite affect antibody binding.
 
 This is largely undocumented and disorganized, currently `work in progress`.
-Even this README is incomplete. 
-If someone is doing research in this area and needs this kind of software,
-contact me over e-mail at `gabriel_scf@hotmail.com`.
+This README is also incomplete. 
+If someone is doing this type of research and is interested in using the software,
+contact me over `gabriel_scf@hotmail.com`.
 
 
 ## Input Data Types
