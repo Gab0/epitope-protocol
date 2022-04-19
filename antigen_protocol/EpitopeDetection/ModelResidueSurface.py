@@ -18,16 +18,17 @@ class RosettaHydrogenClassifier(freesasa.Classifier):
         return 'Not-nitrogen'
 
     def radius(self, residueName, atomName):
-        if re.match('\s*H', atomName):  # Hydrogen
-            return 1.1
-        if re.match('\s*N', atomName):  # Nitrogen
-            return 1.6
-        if re.match('\s*C', atomName):  # Carbon
-            return 1.7
-        if re.match('\s*O', atomName):  # Oxygen
-            return 1.4
-        if re.match('\s*S', atomName):  # Sulfur
-            return 1.8
+        radii = {
+            "H": 1.1,  # Hydrogen
+            "N": 1.6,  # Nitrogen
+            "C": 1.7,  # Carbon
+            "O": 1.4,  # Oxygen
+            "S": 1.8   # Sulfur
+        }
+
+        for symbol, radius in radii.items():
+            if re.match(fr'\s*{symbol}', atomName):
+                return radius
 
         return 0
 

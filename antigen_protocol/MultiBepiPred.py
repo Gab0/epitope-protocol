@@ -38,8 +38,9 @@ def main():
         options.AlignmentFile
     )
 
-    AllModelSequences = list(ProteinAlignment)
-    assert AllModelSequences
+    AllSequences = list(ProteinAlignment)
+    assert AllSequences
+
     PDBSequence = None
     DSSPVector = None
 
@@ -51,33 +52,35 @@ def main():
 
         _, AllModelSequences =\
             StructureMutator.extract_structurally_relevant_mutations(
-                ProteinAlignment,
+                AllSequences,
                 PDBSequence
             )
 
         DSSPVector = ReadDSSP.execute_dssp(options.PDBFile.strip())
 
+    print("All model sequences:")
+    for seq in AllModelSequences:
+        print(type(seq))
+        print(str(seq.seq))
+
     _, (_, EpitopeVector, MutationVector) =\
         processFile(AllModelSequences,
                     read_epitope_file(options.EpitopeFile))
 
-    UniqueSequences = list(ordered_set([
-        str(seq.seq)
-        for seq in AllModelSequences
-    ]))
+    UniqueModelSequences = StructureMutator.sort_unique_sequences(
+        AllModelSequences,
+        PDBSequence
+    )
 
-    if AllModelSequences and not UniqueSequences:
+    if AllModelSequences and not UniqueModelSequences:
         print("Weird behavior")
         print(AllModelSequences)
-        print(UniqueSequences)
+        print(UniqueModelSequences)
         sys.exit(1)
 
-    if not UniqueSequences:
+    if not UniqueModelSequences:
         print("No sequences detected.")
         sys.exit(0)
-
-    UniqueSequences = StructureMutator.sort_unique_sequences(UniqueSequences, PDBSequence)
-
 
     # FIXME: These checking methods are deprecated;
     # assert Sequences[0] == AllModelSequences[0]
@@ -85,7 +88,7 @@ def main():
     for Method in bepipred_post.Methods:
         predict_sequences(
             options,
-            UniqueSequences,
+            UniqueModelSequences,
             Method,
             DSSPVector,
             MutationVector,
@@ -105,6 +108,7 @@ def execute_prediction(Sequences, PredictionMethod):
         SEQ_CODE = get_code(SEQ)
         SEQ_FILE = f"epitope_pred_{SEQ_CODE[:4]}.csv"
 
+        print(SEQ_FILE)
         if os.path.isfile(SEQ_FILE):
             print("Loaded from file.")
             data = pd.read_csv(SEQ_FILE)
@@ -115,10 +119,11 @@ def execute_prediction(Sequences, PredictionMethod):
                 str(SEQ),
                 prediction_method=PredictionMethod
             )
+
             assert content
             print(content)
-            buffer_content = StringIO(content.text)
-            with open(SEQ_FILE, 'w') as f:
+            buffer_content = StringIO(content)
+            with open(SEQ_FILE, 'w', encoding="utf8") as f:
                 f.write(content)
             data = pd.read_csv(buffer_content)
 

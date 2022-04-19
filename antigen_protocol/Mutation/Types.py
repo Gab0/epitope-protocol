@@ -79,6 +79,7 @@ class Mutation():
 
     @classmethod
     def read(cls, text):
+        text = text.strip()
         f = text[0]
         t = text[-1]
         p = int(text[1:-1])

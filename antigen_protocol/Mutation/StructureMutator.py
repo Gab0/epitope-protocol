@@ -230,10 +230,12 @@ def sort_unique_sequences(sequences, reference_sequence) -> List[str]:
     while also starting with the reference sequence.
 
     """
-    try:
+    if all(isinstance(seq, Bio.SeqRecord.SeqRecord) for seq in sequences):
         sequences = [str(s.seq) for s in sequences]
-    except AttributeError:
+    elif all(isinstance(seq, str) for seq in sequences):
         pass
+    else:
+        raise Exception("Unknown sequence type.")
 
     if reference_sequence is None:
         return sequences
