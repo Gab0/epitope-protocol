@@ -3,8 +3,8 @@ import re
 
 def process_simulation_name(name: str) -> str:
     """
-    Convert internal simulation codes into
-    readable names for labels etc...
+    Convert internal simulation codes into readable names.
+    Useful for chart and table labels or whatever else.
     """
 
     # Parse single mutation name patterns.
@@ -37,7 +37,8 @@ def process_simulation_name(name: str) -> str:
             "NAT": "Natural",
             "mutate": "Natural",
             "mutation": "Natural",
-            "MUTATE": "Natural"
+            "MUTATE": "Natural",
+            "DERIV": "Derivada"
         }
         identifier_code = identifier_pat[0].split("_")[-1]
         try:

@@ -8,16 +8,13 @@ from .structure_name import process_simulation_name
 def is_specifier(fname: str,
                  fractionary: bool,
                  normal: bool) -> bool:
-    if fname.startswith("DUMMY"):
-        if fname.endswith(".pdb"):
-            return False
+    if fname.endswith(".pdb"):
+        return False
 
-        if "-" in fname:
-            return fractionary
+    if "-" in fname:
+        return fractionary
 
-        return normal
-
-    return False
+    return normal
 
 
 def process_directory(
@@ -37,7 +34,7 @@ def process_directory(
     specifiers = {}
     for specifier in mutation_specifiers:
         fpath = os.path.join(ROOT_DIR, specifier)
-        with open(fpath) as f:
+        with open(fpath, encoding="utf-8") as f:
             W = []
             muts = f.readlines()
             for mut in muts:
@@ -81,9 +78,6 @@ def process_file_tex(mutation_specifiers: K, output_path: str):
         output.append(IE)
     output.append(IE)
 
-    with open(output_path, 'w') as out:
+    with open(output_path, 'w', encoding="utf-8") as out:
         out.write("\n".join(output))
 
-
-if __name__ == "__main__":
-    process_directory("/home/Science/MD", True, True, "muts")
