@@ -351,8 +351,8 @@ def write_mutated_structure(
         output_file: OutputMutationFile) -> None:
     print(f"Generating mutations to file {output_file.output_filepath}")
 
-    for mut in output_file.mutations:
-        print("\t" + mut.show_spread())
+    #for mut in output_file.mutations:
+    #    print("\t" + mut.show_spread())
 
     if False:
         MUTATOR = None
@@ -447,6 +447,10 @@ def parse_arguments(description=__doc__, require_pdb=True):
     return parser.parse_args()
 
 
+def get_file_id(fpath):
+    return os.path.split(fpath)[-1]
+
+
 def main():
     options = parse_arguments()
 
@@ -459,11 +463,11 @@ def main():
 
         mutations = read_mutations(open(options.mutation_recipe).read())
 
-        PDBName = os.path.splitext(os.path.split(options.PDBFile)[-1])[0]
+        PDBName = os.path.splitext(get_file_id(options.PDBFile))[0]
 
         output_path = os.path.join(
                 os.path.abspath(options.WorkingDirectory),
-                PDBName + "_" + options.mutation_recipe + ".pdb"
+                PDBName + "_" + get_file_id(options.mutation_recipe) + ".pdb"
             )
 
         output_file = OutputMutationFile(

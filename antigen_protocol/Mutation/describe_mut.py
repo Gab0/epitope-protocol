@@ -2,7 +2,7 @@
 from typing import Dict, List
 import os
 import csv
-from autogromacs.mdanalysis import process_simulation_name
+from .structure_name import process_simulation_name
 
 
 def is_specifier(fname: str,

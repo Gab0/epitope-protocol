@@ -25,7 +25,7 @@ setup(
             "multibepipred=antigen_protocol.MultiBepiPred:main",
 
             # -- Mutate Protein;
-            "strutmut=antigen_protocol.StructureMutator:main",
+            "strutmut=antigen_protocol.Mutation.StructureMutator:main",
 
             # -- Structure Visualization;
             "strutgraphic=antigen_protocol.StructureMap:main",

@@ -30,7 +30,7 @@ from ..EpitopeDetection import ModelResidueSurface, ParseBepipred
 from .. OutputConstructor import plotProteinSequence, plotEpitopeScore
 from . import AminoAcidSwaps, ProteinSequenceAlignment
 
-from ..Mutation.Types import MutationSummary
+from ..Mutation.Types import MutationSummary, Mutation
 
 
 class EpitopeMatchResult():
@@ -184,7 +184,7 @@ def processFile(Sequences, EpitopeData: pd.DataFrame, Verbose=0):
     FullMatchCount = 0
     ZeroMatchCount = 0
 
-    SequenceMatches = [[] for s in Sequences]
+    SequenceMatches: List[List[str]] = [[] for s in Sequences]
     if EpitopeData is not None:
         EpitopeDataSize = EpitopeData.shape[0]
         for i in range(EpitopeData.shape[0]):
@@ -440,6 +440,43 @@ def read_epitope_file(fpath):
         return None
 
 
+def create_isolate_record(alignment, mutation_vector, ModelVectorBounds, output_fpath):
+
+    muts = filter(lambda x: x != 0, mutation_vector)
+    print(ModelVectorBounds)
+    try:
+        model_offset = ModelVectorBounds[0]
+    except TypeError:
+        model_offset = (0, 1e6)
+
+    records = []
+    for mut in muts:
+        position = mut.position - model_offset[0] + 1
+        if position <= 0:
+            continue
+        if position > model_offset[1]:
+            continue
+
+        for var, isolates in mut.variations.items():
+            isolates = ["_".join(x.split("_")[:-3]) for x in isolates]
+
+            n = len(isolates)
+
+            if n > 6:
+                isolates = f"{n} isolados."
+            else:
+                isolates = "; ".join(isolates)
+
+            records.append({
+                "Mutação": f"{position}{var}",
+                "Isolados Portadores": isolates
+            })
+
+    df = pd.DataFrame(data=records)
+
+    df.to_csv(output_fpath, index=False)
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
 
@@ -464,6 +501,8 @@ def parse_arguments():
 
     parser.add_argument("-o", "--output", dest="OutputFilePath")
     parser.add_argument("--ext", dest="OutputFigureExtension", default="eps")
+
+    parser.add_argument("--isolate-record-file")
     return parser.parse_args()
 
 
@@ -525,6 +564,14 @@ def main():
         options.XSIZE,
         OutputFilePath
     )
+
+    if options.isolate_record_file:
+        create_isolate_record(
+            Alignment,
+            MutationVector,
+            ModelSequenceBounds,
+            options.isolate_record_file
+        )
 
     if options.BepipredFile and False:
         bepOutputFilepath = Basename + "_score." + options.OutputFigureExtension

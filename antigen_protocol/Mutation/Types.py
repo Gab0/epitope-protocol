@@ -33,6 +33,13 @@ class MutationSummary():
 
         return "\n".join(message)
 
+    def show_mutations(self):
+        return [
+            str(Mutation(self.position, self.baseAA, var))
+            for var, _ in self.variations.items()
+            if var != self.baseAA
+        ]
+
     def get_nbvar(self):
         return len(self.variations.keys())
 
