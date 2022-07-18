@@ -17,7 +17,9 @@ import sys
 import re
 import os
 import argparse
-from typing import List
+import json
+
+from typing import List, Dict
 
 import colored
 
@@ -30,12 +32,13 @@ from ..EpitopeDetection import ModelResidueSurface, ParseBepipred
 from .. OutputConstructor import plotProteinSequence, plotEpitopeScore
 from . import AminoAcidSwaps, ProteinSequenceAlignment
 
-from ..Mutation.Types import MutationSummary, Mutation
+from ..Mutation.Types import MutationSummary
 
 
 class EpitopeMatchResult():
     def __init__(self):
         pass
+
 
 def ParseSequence(FilePath, re_pattern=""):
     Seq = SeqIO.parse(FilePath, format="clustal")
@@ -440,7 +443,7 @@ def read_epitope_file(fpath):
         return None
 
 
-def create_isolate_record(alignment, mutation_vector, ModelVectorBounds, output_fpath):
+def create_isolate_variation_map(mutation_vector, ModelVectorBounds) -> Dict[str, List[str]]:
 
     muts = filter(lambda x: x != 0, mutation_vector)
     print(ModelVectorBounds)
@@ -449,7 +452,7 @@ def create_isolate_record(alignment, mutation_vector, ModelVectorBounds, output_
     except TypeError:
         model_offset = (0, 1e6)
 
-    records = []
+    records = {}
     for mut in muts:
         position = mut.position - model_offset[0] + 1
         if position <= 0:
@@ -457,24 +460,13 @@ def create_isolate_record(alignment, mutation_vector, ModelVectorBounds, output_
         if position > model_offset[1]:
             continue
 
-        for var, isolates in mut.variations.items():
+        for variation, isolates in mut.variations.items():
             isolates = ["_".join(x.split("_")[:-3]) for x in isolates]
 
-            n = len(isolates)
+            identifier = f"{mut.baseAA}{position}{variation}"
+            records[identifier] = isolates
 
-            if n > 6:
-                isolates = f"{n} isolados."
-            else:
-                isolates = "; ".join(isolates)
-
-            records.append({
-                "Mutação": f"{position}{var}",
-                "Isolados Portadores": isolates
-            })
-
-    df = pd.DataFrame(data=records)
-
-    df.to_csv(output_fpath, index=False)
+    return records
 
 
 def parse_arguments():
@@ -500,7 +492,7 @@ def parse_arguments():
     parser.add_argument("--bep", dest="BepipredFile")
 
     parser.add_argument("-o", "--output", dest="OutputFilePath")
-    parser.add_argument("--ext", dest="OutputFigureExtension", default="eps")
+    parser.add_argument("--figure-ext", dest="OutputFigureExtension", default="eps")
 
     parser.add_argument("--isolate-record-file")
     return parser.parse_args()
@@ -566,12 +558,8 @@ def main():
     )
 
     if options.isolate_record_file:
-        create_isolate_record(
-            Alignment,
-            MutationVector,
-            ModelSequenceBounds,
-            options.isolate_record_file
-        )
+        record = create_isolate_variation_map(MutationVector, ModelSequenceBounds)
+        json.dump(record, open(options.isolate_record_file, 'w'))
 
     if options.BepipredFile and False:
         bepOutputFilepath = Basename + "_score." + options.OutputFigureExtension
