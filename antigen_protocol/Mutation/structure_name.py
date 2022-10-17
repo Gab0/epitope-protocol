@@ -1,6 +1,17 @@
 import re
 
 
+identifier_map = {
+    "DUMMY": "Artificial",
+    "RANDOM": "Aleatória",
+    "NAT": "Natural",
+    "mutate": "Natural",
+    "mutation": "Natural",
+    "MUTATE": "Natural",
+    "DERIV": "Derivada"
+}
+
+
 def process_simulation_name(name: str) -> str:
     """
     Convert internal simulation codes into readable names.
@@ -31,20 +42,15 @@ def process_simulation_name(name: str) -> str:
         name = re.sub(domain_pattern, "", name)
 
     if identifier_pat:
-        identifier_map = {
-            "DUMMY": "Artificial",
-            "RANDOM": "Aleatória",
-            "NAT": "Natural",
-            "mutate": "Natural",
-            "mutation": "Natural",
-            "MUTATE": "Natural",
-            "DERIV": "Derivada"
-        }
         identifier_code = identifier_pat[0].split("_")[-1]
         try:
             identifier = identifier_map[identifier_code]
         except KeyError:
-            identifier = "Desconhecido"
+            try:
+                identifier = {v: k for k, v in identifier_map.items()}[identifier_code]
+                print(identifier_code)
+            except KeyError:
+                identifier = "Desconhecido"
 
     else:
         return name
