@@ -327,20 +327,21 @@ def ValidateEpitopeMatches(ReferenceSequence, EpitopeMatches):
 def ProcessMutation(Index, ReferenceBase, AllSequenceBases, SequenceIDs):
     Mutation = 0
 
-    # FIXME: Debug section
-    K = len(AllSequenceBases)
-    J = len(SequenceIDs)
-    if not K == J:
-        print(K)
-        print(J)
+    sbn = len(AllSequenceBases)
+    seqidn = len(SequenceIDs)
+    if not sbn == seqidn:
+        print(
+            f"FATAL: Number of sequences ({sbn}) doesn't match " +
+            f"the number of sequence ids ({seqidn})."
+        )
         sys.exit()
 
-    BaseSet = list(set(AllSequenceBases))
-    if len(BaseSet) > 1:
-        if "X" in BaseSet:
-            if len(BaseSet) == 2:
-                return Mutation
+    BaseSet = [
+        b for b in list(set(AllSequenceBases))
+        if b not in "X"
+    ]
 
+    if not all(b == ReferenceBase for b in BaseSet):
         Mutation = MutationSummary(ReferenceBase, Index)
 
         for idx, Base in enumerate(AllSequenceBases):
@@ -357,10 +358,12 @@ def CreateMutationVector(AllSequences, ReferenceSequence, SequenceIDs):
     for Index, _ in enumerate(ReferenceSequence):
         AllSequenceBases = [s[Index] for s in AllSequences]
         ReferenceBase = ReferenceSequence[Index]
-        MutationVector[Index] = ProcessMutation(Index,
-                                                ReferenceBase,
-                                                AllSequenceBases,
-                                                SequenceIDs)
+        MutationVector[Index] = ProcessMutation(
+            Index,
+            ReferenceBase,
+            AllSequenceBases,
+            SequenceIDs
+        )
     return MutationVector
 
 
