@@ -342,7 +342,7 @@ def ProcessMutation(Index, ReferenceBase, AllSequenceBases, SequenceIDs):
     ]
 
     if not all(b == ReferenceBase for b in BaseSet):
-        Mutation = MutationSummary(ReferenceBase, Index)
+        Mutation = MutationSummary(ReferenceBase, Index + 1)
 
         for idx, Base in enumerate(AllSequenceBases):
             Mutation.addvar(Base, SequenceIDs[idx])
